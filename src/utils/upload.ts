@@ -19,12 +19,11 @@ export async function uploadToStorage(params: {
     if (type === 'video/mp4') return 'mp4'
     return undefined
   })()
+  const fileName = typeof (params.file as File).name === 'string' ? (params.file as File).name : undefined
   const ext =
     params.extension ??
     guessedExtFromType ??
-    ((params.file as any) instanceof File
-      ? params.file.name.split('.').pop() ?? 'bin'
-      : 'bin')
+    (fileName ? fileName.split('.').pop() ?? 'bin' : 'bin')
   const filename = `${crypto.randomUUID()}.${ext}`
   const path = `${dir}/${filename}`
 
