@@ -21,6 +21,7 @@ export default function LiveMediaCapture({ onCaptured }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null)
   const [liveReady, setLiveReady] = useState(false)
+  const [permissionState, setPermissionState] = useState<'prompt' | 'granted' | 'denied' | 'unknown'>('unknown')
 
   useEffect(() => {
     return () => {
@@ -29,6 +30,28 @@ export default function LiveMediaCapture({ onCaptured }: Props) {
       if (previewUrl) URL.revokeObjectURL(previewUrl)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.permissions?.query) {
+      return
+    }
+    let cancelled = false
+    navigator.permissions
+      .query({ name: 'camera' as PermissionName })
+      .then((status) => {
+        if (cancelled) return
+        setPermissionState(status.state as 'prompt' | 'granted' | 'denied')
+        status.onchange = () => {
+          setPermissionState(status.state as 'prompt' | 'granted' | 'denied')
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPermissionState('unknown')
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // Ensure isReady is true when we have an active stream
@@ -150,7 +173,7 @@ export default function LiveMediaCapture({ onCaptured }: Props) {
       // Common cause: not secure context or blocked permission
       const msg =
         e?.name === 'NotAllowedError'
-          ? 'Camera permission was denied. Please allow access and try again.'
+          ? 'Camera permission was denied. Please allow access in your browser settings and try again.'
           : e?.message ?? 'Unable to access camera. Use localhost/HTTPS and try again.'
       setError(msg)
       setIsInitialized(false)
@@ -374,9 +397,17 @@ export default function LiveMediaCapture({ onCaptured }: Props) {
             )}
           </div>
         )}
+        {permissionState === 'denied' && (
+          <div className="text-sm text-red-600">
+            Camera access is currently blocked. Please allow camera permissions in your browser or device settings, then tap&nbsp;
+            <button type="button" className="underline" onClick={enableCamera}>
+              Enable Camera
+            </button>
+            &nbsp;again.
+          </div>
+        )}
       </div>
     </div>
   )
 }
-
 

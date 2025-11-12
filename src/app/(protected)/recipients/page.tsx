@@ -83,7 +83,7 @@ export default function RecipientsPage() {
   }
 
   return (
-    <div className="app-container max-w-2xl space-y-6">
+    <div className="app-container max-w-2xl space-y-6 overflow-x-hidden">
       <h1 className="text-2xl font-semibold">Recipients</h1>
       <form onSubmit={onCreate} className="card p-4 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -109,8 +109,11 @@ export default function RecipientsPage() {
         {loading && <div className="text-gray-500">Loading...</div>}
         {!loading && recipients.length === 0 && <div className="text-gray-600">No recipients yet. Add one above.</div>}
         {recipients.map((r) => (
-          <div key={r.id} className="card p-4 flex items-center justify-between hover:shadow-md transition">
-            <div className="flex items-center gap-3">
+          <div
+            key={r.id}
+            className="card p-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between hover:shadow-md transition"
+          >
+            <div className="flex items-center gap-3 min-w-0">
               <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 border">
                 {r.avatar_url ? <img src={r.avatar_url} className="w-full h-full object-cover" /> : null}
               </div>
@@ -121,13 +124,13 @@ export default function RecipientsPage() {
                 <p className="text-sm text-gray-600">
                   {r.first_name || r.last_name ? `${r.first_name ?? ''} ${r.last_name ?? ''}`.trim() : null}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 break-words">
                   {r.email}
                   {r.phone ? ` · ${r.phone}` : ''}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <label className="btn btn-secondary cursor-pointer">
                 Change photo
                 <input
