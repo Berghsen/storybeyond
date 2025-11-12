@@ -18,7 +18,7 @@ export default function Navbar() {
   return (
     <header className="border-b bg-gradient-to-r from-brand to-brand-light text-white">
       <div className="app-container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg bg-white/20 backdrop-blur-sm" />
           <span className="text-lg font-semibold">StoryBeyond</span>
         </Link>
