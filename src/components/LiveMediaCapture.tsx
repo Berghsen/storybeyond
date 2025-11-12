@@ -124,11 +124,14 @@ export default function LiveMediaCapture({ onCaptured }: Props) {
         }
         
         // Try to play
-        try {
-          await video.play()
-        } catch (playErr) {
-          // Play might fail, but video can still be ready
+        const resume = async () => {
+          try {
+            if (video.paused) await video.play()
+          } catch {
+            // autoplay might be blocked, user interaction will trigger play
+          }
         }
+        resume()
         
         // Check if already ready (has metadata and dimensions)
         if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
@@ -256,6 +259,12 @@ export default function LiveMediaCapture({ onCaptured }: Props) {
     // Keep showing live preview while recording
     setPreviewUrl(null)
     setPreviewKind(null)
+    if (videoRef.current) {
+      videoRef.current.muted = true
+      if (videoRef.current.paused) {
+        videoRef.current.play().catch(() => {})
+      }
+    }
   }
 
   const stopRecording = () => {
@@ -263,7 +272,7 @@ export default function LiveMediaCapture({ onCaptured }: Props) {
   }
 
   return (
-    <div className="card p-4">
+    <div className="card p-4 w-full overflow-hidden">
       <div className="mb-3">
         <p className="font-medium">Record Photo/Video</p>
         <p className="text-sm text-gray-600">Capture media using your device camera.</p>
@@ -271,7 +280,7 @@ export default function LiveMediaCapture({ onCaptured }: Props) {
       {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
       <div className="space-y-3">
         {(isInitialized || previewUrl) && (
-          <div className="w-full max-w-md mx-auto relative">
+          <div className="w-full max-w-full sm:max-w-md mx-auto relative">
             <div className="aspect-[4/3] bg-black/10 rounded-lg overflow-hidden flex items-center justify-center relative">
               {(!previewUrl || recording) ? (
                 <>
