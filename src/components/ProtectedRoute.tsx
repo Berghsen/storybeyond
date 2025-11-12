@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode, useEffect } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 
 // Gate component that restricts access to authenticated users
@@ -9,17 +9,19 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-
   useEffect(() => {
     if (!loading && !user) {
-      const params = new URLSearchParams(searchParams?.toString() ?? '')
-      if (pathname) {
-        params.set('redirect', pathname)
+      let paramsString = ''
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search)
+        if (pathname) {
+          params.set('redirect', pathname)
+        }
+        paramsString = params.toString()
       }
-      router.replace(`/login${params.toString() ? `?${params.toString()}` : ''}`)
+      router.replace(`/login${paramsString ? `?${paramsString}` : ''}`)
     }
-  }, [loading, user, router, pathname, searchParams])
+  }, [loading, user, router, pathname])
 
   if (loading || (!user && typeof window !== 'undefined')) {
     return (

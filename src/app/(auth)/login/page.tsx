@@ -1,20 +1,26 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { FormEvent, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useAuth } from '@/context/AuthContext'
 
 export default function LoginPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams?.get('redirect') ?? '/dashboard'
+  const [redirectTo, setRedirectTo] = useState('/dashboard')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      setRedirectTo(params.get('redirect') ?? '/dashboard')
+    }
+  }, [])
 
   useEffect(() => {
     if (user) {
