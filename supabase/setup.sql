@@ -162,4 +162,60 @@ create policy if not exists "delete_own_story_recipients"
 on public.story_recipients for delete
 using (auth.uid() = user_id);
 
+-- Subscriptions table for plan management
+create table if not exists public.subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references auth.users(id) on delete cascade,
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  plan text not null default 'free',
+  status text not null default 'inactive',
+  storage_used_mb integer not null default 0,
+  current_period_end timestamptz,
+  metadata jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.subscriptions enable row level security;
+
+create policy if not exists "select_own_subscriptions"
+on public.subscriptions for select
+using (auth.uid() = user_id);
+
+create policy if not exists "insert_own_subscriptions"
+on public.subscriptions for insert
+with check (auth.uid() = user_id);
+
+create policy if not exists "update_own_subscriptions"
+on public.subscriptions for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+create or replace function public.update_subscriptions_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists subscriptions_updated_at on public.subscriptions;
+create trigger subscriptions_updated_at
+before update on public.subscriptions
+for each row
+execute function public.update_subscriptions_updated_at();
+
+-- Coupons table (service-managed)
+create table if not exists public.coupons (
+  code text primary key,
+  description text,
+  stripe_coupon_id text,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+alter table public.coupons enable row level security;
+-- No policies so only service role can read/write.
+
 

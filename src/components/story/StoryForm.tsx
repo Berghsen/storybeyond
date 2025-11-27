@@ -10,6 +10,8 @@ import { createStory, getStoryById, updateStory } from '@/services/storyService'
 import { listRecipients, listRecipientsForStory, setRecipientsForStory, type Recipient } from '@/services/recipientService'
 import { useAuth } from '@/context/AuthContext'
 import Modal from '@/components/Modal'
+import { useSubscription } from '@/context/SubscriptionContext'
+import LockedFeatureOverlay from '@/components/LockedFeatureOverlay'
 
 const schema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -48,15 +50,20 @@ export default function StoryForm(props: Props) {
   const [newRecNotify, setNewRecNotify] = useState(false)
   const [publishImmediately, setPublishImmediately] = useState(true)
   const [releaseAt, setReleaseAt] = useState<string>('')
+  const { subscription } = useSubscription()
+  const storyId = props.mode === 'edit' ? props.storyId : undefined
+
+  const recipientsLocked = subscription ? !subscription.limits.recipientsEnabled : false
 
   useEffect(() => {
+    if (recipientsLocked) return
     listRecipients().then(setAllRecipients).catch(() => {})
-  }, [])
+  }, [recipientsLocked])
 
   useEffect(() => {
-    if (props.mode !== 'edit') return
+    if (!storyId) return
     let mounted = true
-    getStoryById(props.storyId)
+    getStoryById(storyId)
       .then((story) => {
         if (!mounted) return
         setTitle(story.title)
@@ -65,13 +72,13 @@ export default function StoryForm(props: Props) {
       })
       .catch((err: any) => setError(err?.message ?? 'Failed to load story'))
       .finally(() => setInitialLoading(false))
-    listRecipientsForStory(props.storyId)
+    listRecipientsForStory(storyId)
       .then((ids) => setSelectedRecipients(ids))
       .catch(() => {})
     return () => {
       mounted = false
     }
-  }, [props.mode, props.mode === 'edit' ? props.storyId : null])
+  }, [storyId])
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -91,7 +98,7 @@ export default function StoryForm(props: Props) {
           image_url: imageUrl,
           release_at: publishImmediately ? new Date().toISOString() : releaseAt || new Date().toISOString(),
         })
-        if (selectedRecipients.length > 0 && user) {
+        if (!recipientsLocked && selectedRecipients.length > 0 && user) {
           await setRecipientsForStory(story.id, user.id, selectedRecipients, false)
         }
       } else if (props.mode === 'edit') {
@@ -101,7 +108,7 @@ export default function StoryForm(props: Props) {
           image_url: imageUrl,
           release_at: publishImmediately ? new Date().toISOString() : releaseAt || new Date().toISOString(),
         })
-        if (user) {
+        if (!recipientsLocked && user) {
           await setRecipientsForStory(props.storyId, user.id, selectedRecipients, false)
         }
       }
@@ -181,8 +188,24 @@ export default function StoryForm(props: Props) {
     }
   }
 
+  const reachedStoryLimit = props.mode === 'create' && subscription && subscription.storyCount >= subscription.limits.stories
+  const reachedVideoLimit = subscription && subscription.videoCount >= subscription.limits.videos
+
   if (initialLoading) {
     return <div className="app-container text-gray-500">Loading...</div>
+  }
+
+  if (reachedStoryLimit) {
+    return (
+      <div className="app-container max-w-2xl">
+        <LockedFeatureOverlay
+          inline
+          title="Story limit reached"
+          message="Upgrade to Pro to keep adding stories, videos, and memories."
+          ctaLabel="Upgrade plan"
+        />
+      </div>
+    )
   }
 
   return (
@@ -215,6 +238,11 @@ export default function StoryForm(props: Props) {
           <ImageUploader bucket="story-images" initialUrl={imageUrl ?? null} onUploaded={(url) => setImageUrl(url)} />
           <div className="my-4" />
           <LiveMediaCapture onCaptured={handleCaptured} />
+          {reachedVideoLimit && (
+            <p className="mt-2 text-sm text-brand">
+              You have reached the video limit for your plan. Upgrade to upload additional videos.
+            </p>
+          )}
           {uploadingCapture && <p className="mt-2 text-sm text-gray-500">Uploading captured media...</p>}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -237,30 +265,34 @@ export default function StoryForm(props: Props) {
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Recipients (optional)</label>
-          <div className="card p-3 space-y-3">
-            <div className="flex flex-wrap gap-2 items-center">
-              <button type="button" className="btn btn-secondary" onClick={() => setAddRecipientOpen(true)}>
-                + Add Recipient
-              </button>
-              {allRecipients.map((r) => (
-                <label key={r.id} className="inline-flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300"
-                    checked={selectedRecipients.includes(r.id)}
-                    onChange={(e) => {
-                      const checked = e.target.checked
-                      setSelectedRecipients((prev) => (checked ? Array.from(new Set([...prev, r.id])) : prev.filter((id) => id !== r.id)))
-                    }}
-                  />
-                  <span>
-                    {r.name} ({r.email})
-                  </span>
-                </label>
-              ))}
-              {allRecipients.length === 0 && <p className="text-sm text-gray-500">No recipients yet. Add some under Recipients.</p>}
+          {recipientsLocked ? (
+            <LockedFeatureOverlay inline title="Invite recipients with a paid plan" message="Upgrade to Individual or Family Legacy to deliver stories automatically." ctaLabel="View plans" />
+          ) : (
+            <div className="card p-3 space-y-3">
+              <div className="flex flex-wrap gap-2 items-center">
+                <button type="button" className="btn btn-secondary" onClick={() => setAddRecipientOpen(true)}>
+                  + Add Recipient
+                </button>
+                {allRecipients.map((r) => (
+                  <label key={r.id} className="inline-flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300"
+                      checked={selectedRecipients.includes(r.id)}
+                      onChange={(e) => {
+                        const checked = e.target.checked
+                        setSelectedRecipients((prev) => (checked ? Array.from(new Set([...prev, r.id])) : prev.filter((id) => id !== r.id)))
+                      }}
+                    />
+                    <span>
+                      {r.name} ({r.email})
+                    </span>
+                  </label>
+                ))}
+                {allRecipients.length === 0 && <p className="text-sm text-gray-500">No recipients yet. Add some under Recipients.</p>}
+              </div>
             </div>
-          </div>
+          )}
         </div>
         <Modal
           open={addRecipientOpen}

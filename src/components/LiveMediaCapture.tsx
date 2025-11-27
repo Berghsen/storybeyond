@@ -95,7 +95,7 @@ export default function LiveMediaCapture({ onCaptured }: Props) {
           video: { facingMode: 'user' },
           audio: { echoCancellation: true, noiseSuppression: true },
         })
-      } catch (err) {
+      } catch {
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'user' },
           audio: false,

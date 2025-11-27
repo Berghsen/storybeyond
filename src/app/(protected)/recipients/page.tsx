@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Modal from '@/components/Modal'
 import { createRecipient, deleteRecipient, listRecipients, updateRecipient, type Recipient } from '@/services/recipientService'
 import { uploadToStorage } from '@/utils/upload'
+import { useSubscription } from '@/context/SubscriptionContext'
+import LockedFeatureOverlay from '@/components/LockedFeatureOverlay'
 
 export default function RecipientsPage() {
   const [recipients, setRecipients] = useState<Recipient[]>([])
@@ -24,8 +26,14 @@ export default function RecipientsPage() {
   const [editRelationship, setEditRelationship] = useState('')
   const [editPhone, setEditPhone] = useState('')
   const [editNotes, setEditNotes] = useState('')
+  const { subscription } = useSubscription()
+  const recipientsLocked = subscription ? !subscription.limits.recipientsEnabled : false
 
   useEffect(() => {
+    if (recipientsLocked) {
+      setLoading(false)
+      return
+    }
     let active = true
     setLoading(true)
     listRecipients()
@@ -35,7 +43,7 @@ export default function RecipientsPage() {
     return () => {
       active = false
     }
-  }, [])
+  }, [recipientsLocked])
 
   const resetForm = () => {
     setName('')
@@ -82,6 +90,20 @@ export default function RecipientsPage() {
     }
   }
 
+  if (recipientsLocked) {
+    return (
+      <div className="app-container max-w-2xl space-y-6 overflow-x-hidden">
+        <h1 className="text-2xl font-semibold">Recipients</h1>
+        <LockedFeatureOverlay
+          inline
+          title="Requires a paid plan"
+          message="Invite recipients and schedule deliveries once you upgrade to Individual or Family Legacy."
+          ctaLabel="Upgrade plan"
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="app-container max-w-2xl space-y-6 overflow-x-hidden">
       <h1 className="text-2xl font-semibold">Recipients</h1>
@@ -115,7 +137,7 @@ export default function RecipientsPage() {
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-100 border">
-                {r.avatar_url ? <img src={r.avatar_url} className="w-full h-full object-cover" /> : null}
+                {r.avatar_url ? <img src={r.avatar_url} alt={`${r.name} avatar`} className="w-full h-full object-cover" /> : null}
               </div>
               <div className="space-y-0.5">
                 <p className="font-medium">
@@ -146,10 +168,11 @@ export default function RecipientsPage() {
                         directory: 'recipients',
                         file,
                         contentType: file.type,
+                        countTowardsQuota: false,
                       })
                       const updated = await updateRecipient(r.id, { avatar_url: url })
                       setRecipients((prev) => prev.map((x) => (x.id === r.id ? updated : x)))
-                    } catch (err) {
+                    } catch {
                       if (typeof window !== 'undefined') window.alert('Failed to upload image')
                     }
                   }}

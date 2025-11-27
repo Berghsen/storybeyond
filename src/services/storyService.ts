@@ -38,24 +38,17 @@ export async function getStoryById(id: string) {
   return data as Story
 }
 
-export async function createStory(input: {
-  title: string
-  description?: string
-  image_url?: string | null
-  release_at?: string
-}) {
-  const { data, error } = await supabase
-    .from('stories')
-    .insert({
-      title: input.title,
-      description: input.description ?? null,
-      image_url: input.image_url ?? null,
-      release_at: input.release_at ?? new Date().toISOString(),
-    })
-    .select()
-    .single()
-  if (error) throw error
-  return data as Story
+export async function createStory(input: { title: string; description?: string; image_url?: string | null; release_at?: string }) {
+  const res = await fetch('/api/stories', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  const payload = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(payload.error ?? 'Failed to create story')
+  }
+  return payload.story as Story
 }
 
 export async function updateStory(id: string, input: {

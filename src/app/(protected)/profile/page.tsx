@@ -72,6 +72,7 @@ export default function ProfilePage() {
         directory: 'users',
         file,
         contentType: file.type,
+        countTowardsQuota: false,
       })
       setAvatarUrl(url)
       await upsertMyProfile({ avatar_url: url })

@@ -1,12 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
-import { HomeIcon, PlusCircleIcon, UsersIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { useEffect, useState } from 'react'
+import { HomeIcon, PlusCircleIcon, UsersIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CreditCardIcon } from '@heroicons/react/24/outline'
 import { usePathname, useRouter } from 'next/navigation'
 import { getMyProfile } from '@/services/profileService'
 import { useAuth } from '@/context/AuthContext'
 import clsx from 'clsx'
+import { useSubscription } from '@/context/SubscriptionContext'
 
 type Props = {
   collapsed?: boolean
@@ -22,6 +23,7 @@ export default function Sidebar({ collapsed = false, onToggle, onClose }: Props)
   const isCollapsed = collapsed
   const pathname = usePathname()
   const router = useRouter()
+  const { subscription } = useSubscription()
 
   useEffect(() => {
     getMyProfile().then((p) => {
@@ -40,18 +42,23 @@ export default function Sidebar({ collapsed = false, onToggle, onClose }: Props)
     to,
     icon: Icon,
     label,
+    matchPrefix = true,
   }: {
     to: string
     icon: any
     label: string
+    matchPrefix?: boolean
   }) => {
-    const isActive = useMemo(() => {
+    const isActive = (() => {
       if (!pathname) return false
-      if (to === '/') {
-        return pathname === '/'
+      if (matchPrefix) {
+        if (to === '/') {
+          return pathname === '/'
+        }
+        return pathname === to || pathname.startsWith(`${to}/`)
       }
-      return pathname === to || pathname.startsWith(`${to}/`)
-    }, [pathname, to])
+      return pathname === to
+    })()
 
     const handleClick = () => {
       if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -92,7 +99,7 @@ export default function Sidebar({ collapsed = false, onToggle, onClose }: Props)
       )}>
         {!isCollapsed ? (
           <>
-            <Link href="/dashboard" className="flex items-center gap-2" onClick={() => typeof window !== 'undefined' && window.innerWidth < 768 && onClose?.()}>
+            <Link href="/" className="flex items-center gap-2" onClick={() => typeof window !== 'undefined' && window.innerWidth < 768 && onClose?.()}>
               <div className="h-8 w-8 rounded-lg bg-white/20" />
               <span className="text-lg font-semibold">StoryBeyond</span>
             </Link>
@@ -115,7 +122,7 @@ export default function Sidebar({ collapsed = false, onToggle, onClose }: Props)
           </>
         ) : (
           <>
-            <Link href="/dashboard" className="flex items-center justify-center" onClick={() => typeof window !== 'undefined' && window.innerWidth < 768 && onClose?.()}>
+            <Link href="/" className="flex items-center justify-center" onClick={() => typeof window !== 'undefined' && window.innerWidth < 768 && onClose?.()}>
               <div className="h-8 w-8 rounded-lg bg-white/20" />
             </Link>
             <button
@@ -149,6 +156,11 @@ export default function Sidebar({ collapsed = false, onToggle, onClose }: Props)
           <div className="text-sm min-w-0">
             <div className="font-medium truncate">{fullName || (user?.email?.split('@')[0] ?? '')}</div>
             <div className="opacity-80 truncate">{user?.email}</div>
+            {subscription && (
+              <span className="mt-1 inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-xs uppercase tracking-wide">
+                {subscription.plan === 'free' ? 'Free plan' : subscription.plan === 'pro' ? 'Pro plan' : 'Premium plan'}
+              </span>
+            )}
           </div>
         )}
       </Link>
@@ -157,7 +169,8 @@ export default function Sidebar({ collapsed = false, onToggle, onClose }: Props)
         <Item to="/dashboard" icon={HomeIcon} label="Dashboard" />
         <Item to="/story/new" icon={PlusCircleIcon} label="Add New Story" />
         <Item to="/recipients" icon={UsersIcon} label="Recipients" />
-        <Item to="/settings" icon={Cog6ToothIcon} label="Settings" />
+        <Item to="/settings" icon={Cog6ToothIcon} label="Settings" matchPrefix={false} />
+        <Item to="/settings/account" icon={CreditCardIcon} label="Account" />
       </nav>
       <div className="px-2 py-3 flex-shrink-0">
         <button
