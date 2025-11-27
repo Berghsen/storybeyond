@@ -1,66 +1,62 @@
-## StoryBeyond (React + Vite + Tailwind + Supabase)
+## StoryBeyond (Next.js + Supabase)
 
-Post‑mortem storytelling MVP where users create stories with images, save them, and view them in a personal dashboard.
-
-### Tech
-- React 18 + Vite
-- TailwindCSS
-- Supabase (Auth, DB, Storage) via `@supabase/supabase-js`
+StoryBeyond is a Next.js 14 application that helps storytellers draft, store, and share memories. It relies on Supabase for auth/data/storage and Stripe for paid subscriptions.
 
 ### Quick start
-1) Install deps:
+1. Install dependencies
+   ```bash
+   npm install
+   ```
+2. Create `.env.local` in the project root (see _Environment_ below).
+3. Start the dev server
+   ```bash
+   npm run dev
+   ```
 
-```bash
-npm install
+### Environment
+
 ```
-
-2) Create `.env` in the project root:
-
-```bash
-VITE_SUPABASE_URL=your-project-url
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
-3) Tailwind is preconfigured. Start dev:
-
-```bash
-npm run dev
-```
-
-4) Build:
-
-```bash
-npm run build && npm run preview
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=public-anon-key
+SUPABASE_SERVICE_KEY=service-role-key
+STRIPE_SECRET_KEY=sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+STRIPE_PRO_MONTHLY_PRICE_ID=price_xxx
+STRIPE_PREMIUM_MONTHLY_PRICE_ID=price_xxx
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ### Supabase setup
-Run the SQL in `supabase/setup.sql` in your Supabase SQL editor:
+Run the SQL in `supabase/setup.sql` inside the Supabase SQL editor **before** booting the app. The script:
 
-- Creates `stories` table
-- Enables Row Level Security
-- Adds policies so users can only read/write their own rows
+- Enables the `pgcrypto` extension for `gen_random_uuid`.
+- Creates all application tables (`stories`, `recipients`, `story_recipients`, `profiles`).
+- Adds the billing primitives needed for Stripe (`subscriptions`, `coupons`, `stripe_webhook_events`).
+- Enables row-level security and policies so users only see their own rows.
+- Installs a trigger that auto-creates a `subscriptions` row whenever a new `auth.users` record is inserted (prevents Stripe checkout from writing to a missing row).
 
-Create a public storage bucket named `story-images` in Storage settings.
+Also create a public storage bucket named `story-images` for uploaded media.
+
+### Stripe & billing
+1. Configure the required environment variables (see above).
+2. In Stripe, create the Pro/Premium prices and copy their price IDs.
+3. Add your webhook endpoint (`https://<domain>/api/stripe/webhook`) and paste the secret into `STRIPE_WEBHOOK_SECRET`.
+4. Optionally seed `public.coupons` with voucher codes via the Supabase SQL editor; only the service-role client can access this table.
+5. Use `stripe listen --forward-to localhost:3000/api/stripe/webhook` while developing. Every event is mirrored into the `stripe_webhook_events` table for debugging/replay.
 
 ### Storage
-The app uploads to `story-images/stories/<uuid>.<ext>` and uses public URLs.
+Uploads land in `story-images/stories/<uuid>.<ext>` and count toward the user’s plan quota via `/api/subscription/storage`.
 
-### Routes
+### Key routes
 - `/login`, `/signup`
-- `/dashboard` (protected)
-- `/story/new` (protected)
-- `/story/:id/edit` (protected)
+- `/dashboard` (protected home)
+- `/story/new`, `/story/[id]/edit`
+- `/settings/account`, `/subscription/success`, `/subscription/cancel`
 
-### Notes
-- Form validation uses Zod
-- Loading and error states included
-- Auth context manages session and protected routes
-
-### Deploying on Vercel
-1) Import this repo in Vercel
-2) Framework preset: Vite
-3) Build command: `npm run build`
-4) Output directory: `dist`
-5) Environment variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-
+### Deployment
+1. Import the repo into Vercel.
+2. Framework preset: **Next.js**.
+3. Build command: `npm run build`
+4. Output directory: `.next`
+5. Supply all environment variables from the _Environment_ section.
 

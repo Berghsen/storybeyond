@@ -1,3 +1,6 @@
+-- Enable pgcrypto for gen_random_uuid (required for Stripe + stories)
+create extension if not exists "pgcrypto";
+
 -- Create stories table
 create table if not exists public.stories (
   id uuid primary key default gen_random_uuid(),
@@ -206,6 +209,29 @@ before update on public.subscriptions
 for each row
 execute function public.update_subscriptions_updated_at();
 
+-- Helpful indexes for Stripe webhook lookups
+create index if not exists subscriptions_stripe_customer_idx on public.subscriptions (stripe_customer_id);
+create index if not exists subscriptions_stripe_subscription_idx on public.subscriptions (stripe_subscription_id);
+
+-- Automatically ensure every auth user has a subscription row (keeps Stripe flow happy)
+create or replace function public.ensure_subscription_row()
+returns trigger as $$
+begin
+  insert into public.subscriptions (user_id, plan, status)
+  values (new.id, 'free', 'inactive')
+  on conflict (user_id) do nothing;
+  return new;
+end;
+$$ language plpgsql
+security definer
+set search_path = 'public';
+
+drop trigger if exists ensure_subscription_row on auth.users;
+create trigger ensure_subscription_row
+after insert on auth.users
+for each row
+execute function public.ensure_subscription_row();
+
 -- Coupons table (service-managed)
 create table if not exists public.coupons (
   code text primary key,
@@ -217,5 +243,22 @@ create table if not exists public.coupons (
 
 alter table public.coupons enable row level security;
 -- No policies so only service role can read/write.
+
+-- Stripe webhook event log (service role only)
+create table if not exists public.stripe_webhook_events (
+  id bigserial primary key,
+  event_id text not null unique,
+  event_type text not null,
+  payload jsonb not null,
+  received_at timestamptz not null default now()
+);
+
+alter table public.stripe_webhook_events enable row level security;
+
+create policy if not exists "service_role_only_stripe_webhooks"
+on public.stripe_webhook_events
+for all
+using (auth.role() = 'service_role')
+with check (auth.role() = 'service_role');
 
 

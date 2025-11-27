@@ -16,6 +16,8 @@ Supabase tables added in `supabase/setup.sql`:
 
 - `subscriptions` – canonical plan info per user (`plan`, `status`, `stripe_customer_id`, `storage_used_mb`, etc.)
 - `coupons` – optional Stripe coupon metadata for voucher codes (service role only, no RLS policies)
+- `stripe_webhook_events` – append-only log used to debug Stripe webhook delivery (service role only)
+- `auth.users → public.subscriptions` trigger – guarantees a `subscriptions` row exists for every account so Stripe checkout metadata always finds a destination.
 
 RLS allows users to read/update their own subscription rows while Stripe webhooks rely on the service-role client.
 
@@ -47,6 +49,7 @@ RLS allows users to read/update their own subscription rows while Stripe webhook
 
 - `POST /api/stripe/webhook`
   - Validates with `STRIPE_WEBHOOK_SECRET`.
+  - Persists every incoming event JSON into `stripe_webhook_events` for auditability/replays (service-role client only).
   - Handles `checkout.session.completed`, `customer.subscription.updated`, and `customer.subscription.deleted`.
   - Updates Supabase `subscriptions` with the latest plan, status, period end, and Stripe IDs.
 

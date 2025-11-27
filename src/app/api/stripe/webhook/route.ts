@@ -32,6 +32,17 @@ export async function POST(request: Request) {
 
   const admin = requireSupabaseAdmin()
 
+  await admin
+    .from('stripe_webhook_events')
+    .upsert(
+      {
+        event_id: event.id,
+        event_type: event.type,
+        payload: event as Stripe.Event,
+      },
+      { onConflict: 'event_id', ignoreDuplicates: true },
+    )
+
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
