@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabaseServer'
 import { stripe } from '@/lib/stripe'
-import type { Database } from '@/types/database'
+import { requireSupabaseAdmin } from '@/lib/subscriptionServer'
 
 export async function POST() {
   if (!stripe) {
@@ -17,9 +17,9 @@ export async function POST() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  type SubscriptionsTable = Database['public']['Tables']['subscriptions']
-  const { data } = await supabase
-    .from<SubscriptionsTable['Row']>('subscriptions')
+  const admin = requireSupabaseAdmin()
+  const { data } = await admin
+    .from('subscriptions')
     .select('stripe_customer_id')
     .eq('user_id', user.id)
     .maybeSingle()
