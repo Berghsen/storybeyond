@@ -25,12 +25,14 @@ begin
 end $$;
 
 -- Policy: Users can insert their own stories (user_id comes from auth.uid())
-create policy if not exists "insert_own_stories"
+drop policy if exists "insert_own_stories" on public.stories;
+create policy "insert_own_stories"
 on public.stories for insert
 with check (auth.uid() = user_id);
 
 -- Policy: Users can select only their own stories
-create policy if not exists "select_own_stories"
+drop policy if exists "select_own_stories" on public.stories;
+create policy "select_own_stories"
 on public.stories for select
 using (auth.uid() = user_id);
 
@@ -38,13 +40,15 @@ using (auth.uid() = user_id);
 notify pgrst, 'reload schema';
 
 -- Policy: Users can update only their own stories
-create policy if not exists "update_own_stories"
+drop policy if exists "update_own_stories" on public.stories;
+create policy "update_own_stories"
 on public.stories for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
 -- Policy: Users can delete only their own stories
-create policy if not exists "delete_own_stories"
+drop policy if exists "delete_own_stories" on public.stories;
+create policy "delete_own_stories"
 on public.stories for delete
 using (auth.uid() = user_id);
 
@@ -72,20 +76,24 @@ alter table public.recipients
 
 alter table public.recipients enable row level security;
 
-create policy if not exists "insert_own_recipients"
+drop policy if exists "insert_own_recipients" on public.recipients;
+create policy "insert_own_recipients"
 on public.recipients for insert
 with check (auth.uid() = user_id);
 
-create policy if not exists "select_own_recipients"
+drop policy if exists "select_own_recipients" on public.recipients;
+create policy "select_own_recipients"
 on public.recipients for select
 using (auth.uid() = user_id);
 
-create policy if not exists "update_own_recipients"
+drop policy if exists "update_own_recipients" on public.recipients;
+create policy "update_own_recipients"
 on public.recipients for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
-create policy if not exists "delete_own_recipients"
+drop policy if exists "delete_own_recipients" on public.recipients;
+create policy "delete_own_recipients"
 on public.recipients for delete
 using (auth.uid() = user_id);
 
@@ -101,11 +109,13 @@ create table if not exists public.story_recipients (
 
 alter table public.story_recipients enable row level security;
 
-create policy if not exists "insert_own_story_recipients"
+drop policy if exists "insert_own_story_recipients" on public.story_recipients;
+create policy "insert_own_story_recipients"
 on public.story_recipients for insert
 with check (auth.uid() = user_id);
 
-create policy if not exists "select_own_story_recipients"
+drop policy if exists "select_own_story_recipients" on public.story_recipients;
+create policy "select_own_story_recipients"
 on public.story_recipients for select
 using (auth.uid() = user_id);
 
@@ -132,15 +142,18 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
-create policy if not exists "select_own_profile"
+drop policy if exists "select_own_profile" on public.profiles;
+create policy "select_own_profile"
 on public.profiles for select
 using (auth.uid() = user_id);
 
-create policy if not exists "upsert_own_profile"
+drop policy if exists "upsert_own_profile" on public.profiles;
+create policy "upsert_own_profile"
 on public.profiles for insert
 with check (auth.uid() = user_id);
 
-create policy if not exists "update_own_profile"
+drop policy if exists "update_own_profile" on public.profiles;
+create policy "update_own_profile"
 on public.profiles for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
@@ -151,17 +164,20 @@ values ('avatars', 'avatars', true)
 on conflict (id) do nothing;
 
 -- Public read avatars
-create policy if not exists "Public read avatars"
+drop policy if exists "Public read avatars" on storage.objects;
+create policy "Public read avatars"
 on storage.objects for select
 using (bucket_id = 'avatars');
 
 -- Authenticated can upload avatars
-create policy if not exists "Authenticated upload avatars"
+drop policy if exists "Authenticated upload avatars" on storage.objects;
+create policy "Authenticated upload avatars"
 on storage.objects for insert
 to authenticated
 with check (bucket_id = 'avatars');
 
-create policy if not exists "delete_own_story_recipients"
+drop policy if exists "delete_own_story_recipients" on public.story_recipients;
+create policy "delete_own_story_recipients"
 on public.story_recipients for delete
 using (auth.uid() = user_id);
 
@@ -182,15 +198,18 @@ create table if not exists public.subscriptions (
 
 alter table public.subscriptions enable row level security;
 
-create policy if not exists "select_own_subscriptions"
+drop policy if exists "select_own_subscriptions" on public.subscriptions;
+create policy "select_own_subscriptions"
 on public.subscriptions for select
 using (auth.uid() = user_id);
 
-create policy if not exists "insert_own_subscriptions"
+drop policy if exists "insert_own_subscriptions" on public.subscriptions;
+create policy "insert_own_subscriptions"
 on public.subscriptions for insert
 with check (auth.uid() = user_id);
 
-create policy if not exists "update_own_subscriptions"
+drop policy if exists "update_own_subscriptions" on public.subscriptions;
+create policy "update_own_subscriptions"
 on public.subscriptions for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
@@ -255,7 +274,8 @@ create table if not exists public.stripe_webhook_events (
 
 alter table public.stripe_webhook_events enable row level security;
 
-create policy if not exists "service_role_only_stripe_webhooks"
+drop policy if exists "service_role_only_stripe_webhooks" on public.stripe_webhook_events;
+create policy "service_role_only_stripe_webhooks"
 on public.stripe_webhook_events
 for all
 using (auth.role() = 'service_role')

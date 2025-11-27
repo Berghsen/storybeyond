@@ -11,6 +11,7 @@ export async function POST(request: Request) {
   }
 
   const supabase = createSupabaseServerClient()
+  const admin = requireSupabaseAdmin()
   const {
     data: { user },
     error: userError,
@@ -39,12 +40,11 @@ export async function POST(request: Request) {
       metadata: { userId: user.id },
     })
     stripeCustomerId = customer.id
-    await supabase.from('subscriptions').update({ stripe_customer_id: customer.id }).eq('user_id', user.id)
+    await admin.from('subscriptions').update({ stripe_customer_id: customer.id }).eq('user_id', user.id)
   }
 
   let discounts: { coupon: string }[] | undefined
   if (couponCode) {
-    const admin = requireSupabaseAdmin()
     const { data, error } = await admin
       .from('coupons')
       .select('*')
