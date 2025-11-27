@@ -15,7 +15,7 @@ const faqSections = [
       },
       {
         question: 'Do you offer family discounts?',
-        answer: 'Yes! Annual Pro and Premium plans come with an extra 2 months free plus shared storage boosts.',
+        answer: 'Yes! Annual Premium plans come with an extra 2 months free plus shared storage boosts.',
       },
     ],
   },
@@ -37,7 +37,7 @@ const faqSections = [
     faqs: [
       {
         question: 'Is there a file size limit?',
-        answer: 'Individual uploads are capped at 5GB on Premium, 2GB on Pro, and 500MB on Free. Need more? Reach out and we will help.',
+        answer: 'Individual uploads are capped at 5GB on Premium and 500MB on Free. Need more? Reach out and we will help.',
       },
       {
         question: 'What formats do you support?',

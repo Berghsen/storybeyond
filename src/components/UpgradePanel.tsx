@@ -35,18 +35,11 @@ async function openPortal() {
 
 const planCards = [
   {
-    tier: 'pro' as PlanTier,
-    label: 'Individual',
-    description: 'Perfect for everyday storytellers capturing weekly memories.',
-    price: '$19 / month',
-    perks: ['Unlimited stories', 'HD video uploads', 'Priority support', 'Shared spaces'],
-  },
-  {
     tier: 'premium' as PlanTier,
-    label: 'Family Legacy',
-    description: 'Invite the entire family to preserve deep archives and heritage.',
+    label: 'Premium',
+    description: 'Unlock the full delivery workflow with high limits and concierge onboarding.',
     price: '$39 / month',
-    perks: ['Team rooms', 'Advanced analytics', 'Custom branding', 'Dedicated guide'],
+    perks: ['Unlimited stories & HD uploads', 'Recipients + delivery system', 'Priority support & onboarding'],
   },
 ]
 
@@ -74,8 +67,7 @@ export default function UpgradePanel() {
         <div>
           <p className="text-sm uppercase tracking-[0.3em] text-brand-muted">Current plan</p>
           <p className="text-2xl font-semibold text-brand mt-2">
-            {activePlan === 'free' ? 'Free' : activePlan === 'pro' ? 'Pro' : 'Premium'}{' '}
-            <span className="text-sm text-gray-500 font-normal">({subscription?.status ?? 'inactive'})</span>
+            {activePlan === 'free' ? 'Free' : 'Premium'} <span className="text-sm text-gray-500 font-normal">({subscription?.status ?? 'inactive'})</span>
           </p>
         </div>
         {activePlan !== 'free' ? (

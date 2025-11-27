@@ -166,7 +166,7 @@ export default function DashboardPage() {
         <div className="mt-10 relative">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold">Scheduled</h2>
-            {scheduledLocked && <span className="text-sm text-brand">Pro feature</span>}
+            {scheduledLocked && <span className="text-sm text-brand">Premium feature</span>}
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 relative">
             {scheduled.length === 0 && !scheduledLocked && <div className="text-gray-500">No scheduled stories yet.</div>}
@@ -201,12 +201,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))}
-            {scheduledLocked && (
-              <LockedFeatureOverlay
-                message="Scheduling future releases lives in Pro."
-                title="Locked"
-              />
-            )}
+            {scheduledLocked && <LockedFeatureOverlay message="Scheduling future releases lives in Premium." title="Locked" />}
           </div>
         </div>
         {lightboxUrl && <Lightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}

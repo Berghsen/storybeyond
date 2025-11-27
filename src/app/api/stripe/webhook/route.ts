@@ -75,7 +75,7 @@ export async function POST(request: Request) {
         userId = await findUserIdByCustomer(subscription.customer as string)
       }
       if (userId) {
-        const planMeta = (subscription.metadata?.plan as PlanTier | undefined) ?? 'pro'
+        const planMeta = (subscription.metadata?.plan as PlanTier | undefined) ?? 'premium'
         const nextPlan: PlanTier = subscription.status === 'canceled' || event.type === 'customer.subscription.deleted' ? 'free' : planMeta
         await admin
           .from('subscriptions')

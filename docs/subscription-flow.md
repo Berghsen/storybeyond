@@ -5,8 +5,7 @@ This document explains how the Story Beyond subscription system works end-to-end
 ## Plans & Limits
 
 - **Free** – 1 story, 1 video upload, 500 MB storage
-- **Pro** – default paid tier (unlimited stories, high limits)
-- **Premium** – optional high-touch tier
+- **Premium** – the single paid tier (unlocks the entire workflow with high limits)
 
 Limits live in `src/lib/subscriptionPlans.ts` and are consumed by both the API routes and the React subscription context.
 
@@ -76,7 +75,6 @@ Set the following in `.env.local`:
 ```
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PRO_MONTHLY_PRICE_ID=price_...
 STRIPE_PREMIUM_MONTHLY_PRICE_ID=price_...
 NEXT_PUBLIC_APP_URL=https://localhost:3000
 SUPABASE_SERVICE_KEY=...
@@ -89,7 +87,7 @@ SUPABASE_SERVICE_KEY=...
 - Recipients page and the story-recipient selector both show a locked overlay until the user upgrades.
 - Dashboard upgrade CTAs route to `/settings/account`.
 - Starting checkout opens Stripe; cancel returns to `/subscription/cancel`.
-- Successful payment hits `/subscription/success`, Stripe webhook marks the user as `pro`/`premium`, and the dashboard unlocks features immediately after refresh.
+- Successful payment hits `/subscription/success`, Stripe webhook marks the user as `premium`, and the dashboard unlocks features immediately after refresh.
 - Voucher code field accepts valid codes and errors on invalid ones.
 - Locked sections (scheduled stories, etc.) show `LockedFeatureOverlay` until plan upgrades.
 

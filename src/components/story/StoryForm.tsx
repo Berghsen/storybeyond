@@ -198,12 +198,7 @@ export default function StoryForm(props: Props) {
   if (reachedStoryLimit) {
     return (
       <div className="app-container max-w-2xl">
-        <LockedFeatureOverlay
-          inline
-          title="Story limit reached"
-          message="Upgrade to Pro to keep adding stories, videos, and memories."
-          ctaLabel="Upgrade plan"
-        />
+        <LockedFeatureOverlay inline title="Story limit reached" message="Upgrade to Premium to keep adding stories, videos, and memories." ctaLabel="Upgrade plan" />
       </div>
     )
   }

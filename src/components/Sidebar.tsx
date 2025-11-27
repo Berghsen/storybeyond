@@ -158,7 +158,7 @@ export default function Sidebar({ collapsed = false, onToggle, onClose }: Props)
             <div className="opacity-80 truncate">{user?.email}</div>
             {subscription && (
               <span className="mt-1 inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-xs uppercase tracking-wide">
-                {subscription.plan === 'free' ? 'Free plan' : subscription.plan === 'pro' ? 'Pro plan' : 'Premium plan'}
+                {subscription.plan === 'free' ? 'Free plan' : 'Premium plan'}
               </span>
             )}
           </div>

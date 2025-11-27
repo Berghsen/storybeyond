@@ -21,7 +21,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=public-anon-key
 SUPABASE_SERVICE_KEY=service-role-key
 STRIPE_SECRET_KEY=sk_test_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
-STRIPE_PRO_MONTHLY_PRICE_ID=price_xxx
 STRIPE_PREMIUM_MONTHLY_PRICE_ID=price_xxx
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
@@ -39,7 +38,7 @@ Also create a public storage bucket named `story-images` for uploaded media.
 
 ### Stripe & billing
 1. Configure the required environment variables (see above).
-2. In Stripe, create the Pro/Premium prices and copy their price IDs.
+2. In Stripe, create the Premium recurring price and copy its price ID into `STRIPE_PREMIUM_MONTHLY_PRICE_ID`.
 3. Add your webhook endpoint (`https://<domain>/api/stripe/webhook`) and paste the secret into `STRIPE_WEBHOOK_SECRET`.
 4. Optionally seed `public.coupons` with voucher codes via the Supabase SQL editor; only the service-role client can access this table.
 5. Use `stripe listen --forward-to localhost:3000/api/stripe/webhook` while developing. Every event is mirrored into the `stripe_webhook_events` table for debugging/replay.
