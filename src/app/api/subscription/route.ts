@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabaseServer'
 import { getLimitsForPlan, ensureSubscription, isVideoUrl } from '@/lib/subscriptionServer'
 import type { PlanTier } from '@/lib/subscriptionPlans'
+import type { Database } from '@/types/database'
 
 export async function GET() {
   const supabase = createSupabaseServerClient()
@@ -36,8 +37,10 @@ export async function GET() {
     return NextResponse.json({ error: storiesCountQuery.error.message }, { status: 500 })
   }
 
+  type StoryRow = Database['public']['Tables']['stories']['Row']
   const videoQuery = await supabase.from('stories').select('id,image_url').eq('user_id', user.id)
-  const videoCount = videoQuery.data?.filter((story) => isVideoUrl(story.image_url)).length ?? 0
+  const videoData = (videoQuery.data ?? []) as Pick<StoryRow, 'image_url'>[]
+  const videoCount = videoData.filter((story) => isVideoUrl(story.image_url)).length
 
   return NextResponse.json({
     plan,
