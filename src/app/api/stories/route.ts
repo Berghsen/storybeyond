@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabaseServer'
-import { ensureSubscription, getLimitsForPlan, isVideoUrl } from '@/lib/subscriptionServer'
+import { ensureSubscription, getLimitsForPlan, isVideoUrl, requireSupabaseAdmin } from '@/lib/subscriptionServer'
 import type { PlanTier } from '@/lib/subscriptionPlans'
 import type { Database } from '@/types/database'
 
 export async function POST(request: Request) {
   const supabase = createSupabaseServerClient()
+  const admin = requireSupabaseAdmin()
   const body = await request.json().catch(() => ({}))
   const { title, description, image_url, release_at } = body ?? {}
 
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
     user_id: user.id,
   }
 
-  const insert = await supabase.from('stories').insert(insertPayload).select('*').single()
+  const insert = await admin.from('stories').insert(insertPayload).select('*').single()
 
   if (insert.error) {
     return NextResponse.json({ error: insert.error.message }, { status: 500 })
