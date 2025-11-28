@@ -1,7 +1,9 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
+import { getMyProfile } from '@/services/profileService'
 
 const navItems = [
   { label: 'Home', href: '/' },
@@ -13,14 +15,50 @@ const navItems = [
 
 export default function MarketingNav() {
   const { user } = useAuth()
-  const metadataName =
-    (user?.user_metadata?.full_name as string | undefined) ||
-    (user?.user_metadata?.name as string | undefined) ||
-    ''
-  const firstName =
-    metadataName.trim().split(' ').filter(Boolean)[0] ||
-    (user?.user_metadata?.first_name as string | undefined)?.trim() ||
-    'friend'
+  const [firstName, setFirstName] = useState('friend')
+
+  useEffect(() => {
+    if (!user) {
+      setFirstName('friend')
+      return
+    }
+
+    // Try to get first name from profile
+    getMyProfile()
+      .then((profile) => {
+        if (profile?.full_name) {
+          const nameParts = profile.full_name.trim().split(' ').filter(Boolean)
+          if (nameParts.length > 0) {
+            setFirstName(nameParts[0])
+            return
+          }
+        }
+        // Fallback to user metadata
+        const metadataName =
+          (user?.user_metadata?.full_name as string | undefined) ||
+          (user?.user_metadata?.name as string | undefined) ||
+          ''
+        const nameParts = metadataName.trim().split(' ').filter(Boolean)
+        if (nameParts.length > 0) {
+          setFirstName(nameParts[0])
+        } else {
+          setFirstName('friend')
+        }
+      })
+      .catch(() => {
+        // Fallback to user metadata on error
+        const metadataName =
+          (user?.user_metadata?.full_name as string | undefined) ||
+          (user?.user_metadata?.name as string | undefined) ||
+          ''
+        const nameParts = metadataName.trim().split(' ').filter(Boolean)
+        if (nameParts.length > 0) {
+          setFirstName(nameParts[0])
+        } else {
+          setFirstName('friend')
+        }
+      })
+  }, [user])
 
   return (
     <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/90 backdrop-blur">
