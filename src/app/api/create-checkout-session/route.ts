@@ -5,6 +5,8 @@ import { ensureSubscription, requireSupabaseAdmin } from '@/lib/subscriptionServ
 import type { PlanTier } from '@/lib/subscriptionPlans'
 import { planPriceIdMap } from '@/lib/serverPricing'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
   if (!stripe) {
     return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 })

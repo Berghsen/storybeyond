@@ -4,6 +4,8 @@ import { ensureSubscription, getLimitsForPlan, requireSupabaseAdmin } from '@/li
 import type { PlanTier } from '@/lib/subscriptionPlans'
 import type { Database } from '@/types/database'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
   const supabase = createSupabaseServerClient()
 

@@ -4,6 +4,8 @@ import { getLimitsForPlan, ensureSubscription, isVideoUrl } from '@/lib/subscrip
 import type { PlanTier } from '@/lib/subscriptionPlans'
 import type { Database } from '@/types/database'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const supabase = createSupabaseServerClient()
   const {

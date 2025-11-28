@@ -3,6 +3,8 @@ import { createSupabaseServerClient } from '@/lib/supabaseServer'
 import { stripe } from '@/lib/stripe'
 import { requireSupabaseAdmin } from '@/lib/subscriptionServer'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST() {
   if (!stripe) {
     return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 })

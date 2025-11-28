@@ -5,6 +5,8 @@ import { requireSupabaseAdmin } from '@/lib/subscriptionServer'
 import type Stripe from 'stripe'
 import type { PlanTier } from '@/lib/subscriptionPlans'
 
+export const dynamic = 'force-dynamic'
+
 async function findUserIdByCustomer(customerId: string) {
   const admin = requireSupabaseAdmin()
   const { data } = await admin.from('subscriptions').select('user_id').eq('stripe_customer_id', customerId).maybeSingle()
