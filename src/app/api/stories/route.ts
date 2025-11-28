@@ -54,11 +54,7 @@ export async function POST(request: Request) {
     user_id: user.id,
   }
 
-  const insert = await supabase
-    .from<StoryRow>('stories')
-    .insert(insertPayload)
-    .select('*')
-    .single()
+  const insert = await supabase.from('stories').insert(insertPayload).select('*').single()
 
   if (insert.error) {
     return NextResponse.json({ error: insert.error.message }, { status: 500 })
