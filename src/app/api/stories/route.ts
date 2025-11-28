@@ -34,8 +34,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Story limit reached for your plan' }, { status: 403 })
   }
 
+  type StoryRow = Database['public']['Tables']['stories']['Row']
+  type StoryInsert = Database['public']['Tables']['stories']['Insert']
+
   if (image_url && isVideoUrl(image_url)) {
-    type StoryRow = Database['public']['Tables']['stories']['Row']
     const videoQuery = await supabase.from('stories').select('id,image_url').eq('user_id', user.id)
     const videoData = (videoQuery.data ?? []) as Pick<StoryRow, 'image_url'>[]
     const videoCount = videoData.filter((story) => isVideoUrl(story.image_url)).length
@@ -44,15 +46,17 @@ export async function POST(request: Request) {
     }
   }
 
+  const insertPayload: StoryInsert = {
+    title,
+    description: description ?? null,
+    image_url: image_url ?? null,
+    release_at: release_at ?? new Date().toISOString(),
+    user_id: user.id,
+  }
+
   const insert = await supabase
-    .from('stories')
-    .insert({
-      title,
-      description: description ?? null,
-      image_url: image_url ?? null,
-      release_at: release_at ?? new Date().toISOString(),
-      user_id: user.id,
-    })
+    .from<StoryRow>('stories')
+    .insert(insertPayload)
     .select('*')
     .single()
 
